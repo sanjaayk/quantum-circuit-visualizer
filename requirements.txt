@@ -1,0 +1,12 @@
+# Qiskit 2.5.x segfaults when a Streamlit page reruns, so stay below 2.5 (see docs/architecture.md).
+qiskit>=2.1,<2.5
+qiskit-aer>=0.17
+qiskit-ibm-runtime>=0.40
+numpy
+pandas
+plotly>=5.20
+matplotlib
+pylatexenc
+streamlit>=1.40
+python-dotenv
+pytest

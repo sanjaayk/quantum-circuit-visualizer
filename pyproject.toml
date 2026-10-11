@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quantum-circuit-visualizer"
+version = "2.0.0"
+description = "Interactive quantum circuit visualizer: Bloch spheres, amplitudes, Grover's search and real IBM Quantum hardware"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Sanjaay Kumaraguru" }]
+dependencies = ["qiskit>=2.1,<2.5", "qiskit-aer>=0.17", "qiskit-ibm-runtime>=0.40", "numpy", "plotly>=5.20"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

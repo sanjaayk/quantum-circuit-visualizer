@@ -1,0 +1,26 @@
+# Secrets
+.env
+*.env
+qiskit-ibm.json
+.qiskit/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv*/
+venv/
+build/
+dist/
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# OS / editors
+.DS_Store
+.vscode/
+.idea/
