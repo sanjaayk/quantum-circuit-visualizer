@@ -2,7 +2,7 @@
 
 **See what a quantum circuit does to its qubits, one gate at a time, then run it on a real IBM quantum computer.**
 
-[**Live app → quantum-visualizer.streamlit.app**](https://quantum-visualizer.streamlit.app)
+[**Live app → quantum-visualizer.streamlit.app**](https://quantum-circuit-visualizer-ex9xmkwectnaknfwrdvoh8.streamlit.app/)
 
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 ![Qiskit](https://img.shields.io/badge/Qiskit-2.x-6929C4)
