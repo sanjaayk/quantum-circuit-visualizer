@@ -87,6 +87,79 @@ else:
             del ss[k]
         st.rerun()
 
+    # ---------------- brief benchmark: four circuits in one job ----------------
+    import json
+
+    import pandas as pd
+    from qviz.benchmark import BRIEF_SHOTS, brief_circuits, fetch_batch, submit_batch, summarize
+
+    st.subheader("Technical-brief benchmark")
+    st.markdown("Sends the four circuits from the brief (Bell state, 2-qubit Grover, 3-qubit GHZ, 3-qubit Grover) "
+                f"to one QPU as a **single job** with {BRIEF_SHOTS:,} shots each. It usually uses well under a minute "
+                "of QPU time; time spent waiting in the queue is free.")
+    if "ibm_backends" not in ss:
+        try:
+            ss.ibm_backends = sorted(b.name for b in service.backends(simulator=False, operational=True))
+        except Exception as e:
+            ss.ibm_backends = []
+            st.warning(f"Could not list your QPUs ({e}). The least busy one will be used.")
+    names = ss.ibm_backends or ["(least busy)"]
+    default = names.index("ibm_fez") if "ibm_fez" in names else 0
+    bcol, scol = st.columns([2, 1])
+    chosen = bcol.selectbox("QPU", names, index=default,
+                            help="ibm_fez matches the first noise-model column in the brief.")
+    if scol.button("Submit benchmark job", type="primary", width="stretch"):
+        with st.spinner("Compiling four circuits for the chip and submitting…"):
+            try:
+                job_id, used = submit_batch(service, None if chosen == "(least busy)" else chosen)
+                ss.bench_job = job_id
+                ss.bench_job_box = job_id
+                st.success(f"Submitted to {used}. Job ID: {job_id}. Save this ID somewhere safe.")
+            except Exception as e:
+                st.error(f"Submission failed: {e}")
+
+    st.markdown("**Get results.** Paste a job ID (the one above is filled in for you) and check its status. "
+                "You can close the app and come back later with the same ID.")
+    jcol, gcol = st.columns([2, 1])
+    job_box = jcol.text_input("Job ID", key="bench_job_box", label_visibility="collapsed",
+                              placeholder="Job ID, e.g. d3abc123…")
+    if gcol.button("Check status / get results", width="stretch", disabled=not job_box.strip()):
+        with st.spinner("Asking IBM Quantum…"):
+            try:
+                ss.bench_info = (job_box.strip(), fetch_batch(service, job_box.strip()))
+            except Exception as e:
+                st.error(f"Could not fetch the job: {e}")
+
+    if ss.get("bench_info"):
+        jid, info = ss.bench_info
+        if not info["counts"]:
+            st.info(f"Status: **{info['status']}** on {info['backend']}. "
+                    "QUEUED or RUNNING means it is still waiting; check again in a few minutes.")
+        else:
+            rows = summarize(info["counts"])
+            m = st.columns(3)
+            m[0].metric("Backend", info["backend"])
+            m[1].metric("Date", info["date"] or "—")
+            m[2].metric("QPU time used", f"{info['qpu_seconds']:.1f} s" if info["qpu_seconds"] else "—")
+            df = pd.DataFrame(rows)[["circuit", "ideal", "result", "top outcomes"]]
+            df.columns = ["Circuit", "Ideal", f"Real hardware ({info['backend']}, {info['date']})", "Top outcomes (counts)"]
+            st.dataframe(df, hide_index=True, width="stretch")
+            st.markdown("**Ready to paste into the brief's table:**")
+            st.code("\n".join(f"{r['circuit']}: {r['result']}" for r in rows) +
+                    f"\nBackend: {info['backend']}, {info['date']}, {rows[0]['shots']:,} shots per circuit, job {jid}",
+                    language=None)
+            export = {"job_id": jid, "backend": info["backend"], "date": info["date"],
+                      "qpu_seconds": info["qpu_seconds"],
+                      "circuits": [{**r, "counts": c} for r, c in zip(rows, info["counts"])]}
+            st.download_button("Download results (JSON)", json.dumps(export, indent=2),
+                               file_name=f"brief_benchmark_{info['backend']}_{info['date']}.json")
+            for b, counts in zip(brief_circuits(), info["counts"]):
+                with st.expander(b.label):
+                    plot(counts_vs_ideal_figure(counts, ideal_distribution(b.circuit)))
+
+    st.divider()
+    st.subheader("Run one circuit")
+
     if st.button(f"Submit {shots} shots to the least busy QPU", type="primary"):
         with st.spinner("Transpiling and submitting…"):
             try:

@@ -145,3 +145,24 @@ def test_parse_sequence():
     for bad in ["", "CX", "RX", "RX(__import__)"]:
         with pytest.raises(ValueError):
             parse_sequence(bad)
+
+
+# ---------- brief benchmark ----------
+def test_benchmark_metrics():
+    from qviz.benchmark import brief_circuits, summarize
+
+    perfect = [{"00": 2048, "11": 2048}, {"11": 4096}, {"000": 2048, "111": 2048}, {"101": 3870, "000": 226}]
+    rows = summarize(perfect)
+    assert [r["value_%"] for r in rows] == [0.0, 100.0, 0.0, 94.5]
+    assert rows[0]["result"] == "0.0% in |01⟩ + |10⟩"
+    assert rows[3]["ideal"] == "|101⟩ 94.5%"
+    assert len(brief_circuits()) == 4
+
+
+def test_benchmark_reproduces_brief_numbers():
+    pytest.importorskip("qiskit_ibm_runtime")
+    from qviz.benchmark import run_models
+
+    fez = run_models(devices=("ibm_fez (Heron r2, 156 q)",))["ibm_fez (Heron r2, 156 q)"]
+    assert [r["value_%"] for r in fez] == [2.9, 95.3, 4.0, 75.9]
+    assert fez[3]["CZ gates"] == 45

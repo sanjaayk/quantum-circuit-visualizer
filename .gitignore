@@ -24,3 +24,6 @@ dist/
 .DS_Store
 .vscode/
 .idea/
+
+# Benchmark result files (keep or commit deliberately)
+brief_benchmark_*.json
